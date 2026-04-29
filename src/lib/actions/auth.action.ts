@@ -1,6 +1,11 @@
 import type { LoginRequest, LoginResponse } from "@/lib/types/auth";
 
-const LOGIN_API_URL = "https://cogni-advisor-backend.vercel.app/api/auth/login";
+const API_BASE_URL = process.env.COGNI_API_BASE_URL;
+if (!API_BASE_URL) {
+  throw new Error("Missing COGNI_API_BASE_URL environment variable.");
+}
+
+const LOGIN_API_URL = `${API_BASE_URL}/api/auth/login`;
 
 export async function loginStudentAction(
   payload: LoginRequest
