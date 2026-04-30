@@ -1,3 +1,5 @@
+"use client";
+
 import { Shield } from "lucide-react";
 
 import RoleLoginForm from "../_components/role-login-form";
