@@ -10,12 +10,10 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const role = session.user.role?.toLowerCase();
-
   redirect(
-    role === "advisor"
+    session.user.role === "advisor"
       ? "/advisor/dashboard"
-      : role === "admin"
+      : session.user.role === "admin"
         ? "/admin/dashboard"
         : "/student/dashboard"
   );

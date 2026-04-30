@@ -41,8 +41,9 @@ const resolveEndpointByRole = (role: LoginRole) => {
 };
 
 const parseRole = (rawRole?: string): LoginRole | null => {
-  if (rawRole === "student" || rawRole === "advisor" || rawRole === "admin") {
-    return rawRole;
+  const normalized = rawRole?.toLowerCase();
+  if (normalized === "student" || normalized === "advisor" || normalized === "admin") {
+    return normalized;
   }
   return null;
 };
@@ -145,7 +146,8 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.accessToken = user.token;
-        token.role = user.role;
+        // Normalize role to lowercase — backend returns ADMIN/STUDENT/ADVISOR
+        token.role = (user.role?.toLowerCase() ?? user.role) as typeof user.role;
         token.email = user.email;
         token.name = user.name ?? undefined;
         token.firstName = user.firstName ?? undefined;

@@ -28,8 +28,8 @@ export default async function AdvisorDashboardPage() {
     redirect("/login");
   }
 
-  if (session.user.role?.toLowerCase() !== "advisor") {
-    redirect("/student/dashboard");
+  if (session.user.role !== "advisor") {
+    redirect("/");
   }
 
   const advisorDataResult = await getAdvisorDataAction(session.accessToken);
