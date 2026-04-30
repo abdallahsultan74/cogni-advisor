@@ -13,7 +13,6 @@ type LoginPayload = {
   role: LoginRole;
 };
 
-const resolveRedirectPath = () => "/";
 
 const getDisplayNameFromEmail = (email: string) => {
   const raw = email.split("@")[0] ?? "";
@@ -66,6 +65,18 @@ const normalizeCallbackUrl = (callbackUrl?: string | null) => {
   return callbackUrl;
 };
 
+const getDashboardByRole = (role: LoginRole): string => {
+  switch (role) {
+    case "admin":
+      return "/admin/dashboard";
+    case "advisor":
+      return "/advisor/dashboard";
+    case "student":
+    default:
+      return "/student/dashboard";
+  }
+};
+
 export default function useLogin() {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -88,6 +99,7 @@ export default function useLogin() {
         throw new Error("Unable to sign in right now. Please try again.");
       }
 
+      // Get callbackUrl from query params (e.g. user was redirected here from a protected page)
       const callbackUrl = normalizeCallbackUrl(
         new URLSearchParams(window.location.search).get("callbackUrl")
       );
@@ -95,12 +107,16 @@ export default function useLogin() {
       const displayName = await getDisplayNameFromSession(values.email);
       const successMessage =
         values.role === "advisor"
-          ? `Welcome Bcak Eng ${displayName}`
+          ? `Welcome Back Eng ${displayName}`
           : `Welcome Back ${displayName}`;
 
       toast.success(successMessage);
       setIsRedirecting(true);
-      const redirectTo = callbackUrl || response.url || resolveRedirectPath();
+
+      // Use callbackUrl if the user was trying to reach a specific page,
+      // otherwise navigate directly to the role's dashboard.
+      // Do NOT use response.url — it points back to the login page.
+      const redirectTo = callbackUrl || getDashboardByRole(values.role);
       setTimeout(() => {
         window.location.href = redirectTo;
       }, 700);
