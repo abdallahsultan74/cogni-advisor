@@ -28,7 +28,7 @@ export default async function AdvisorDashboardPage() {
     redirect("/login");
   }
 
-  if (session.user.role !== "advisor") {
+  if (session.user.role?.toLowerCase() !== "advisor") {
     redirect("/student/dashboard");
   }
 
