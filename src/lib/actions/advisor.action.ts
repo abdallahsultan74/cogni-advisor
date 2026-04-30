@@ -17,7 +17,7 @@ export async function getAdvisorDataAction(
     throw new Error("Missing COGNI_API_BASE_URL environment variable.");
   }
 
-  const response = await fetch(`${apiBaseUrl}/api/users/advisors`, {
+  let response = await fetch(`${apiBaseUrl}/api/users/advisors`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -29,6 +29,27 @@ export async function getAdvisorDataAction(
     data = await response.json();
   } catch {
     data = null;
+  }
+
+  const isSupabaseError =
+    !response.ok &&
+    response.status === 401 &&
+    apiBaseUrl.includes("supabase.co");
+
+  if (isSupabaseError) {
+    const fallbackUrl = "https://cogni-advisor-backend.vercel.app/api/users/advisors";
+    response = await fetch(fallbackUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
   }
 
   if (response.status === 403) {

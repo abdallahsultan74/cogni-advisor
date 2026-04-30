@@ -52,17 +52,43 @@ const authorizeWithBackend = async (params: {
   password: string;
   role: LoginRole;
 }): Promise<AuthorizedUser> => {
-  const response = await fetch(resolveEndpointByRole(params.role), {
+  const endpoint = resolveEndpointByRole(params.role);
+  let response = await fetch(endpoint, {
     method: "POST",
     body: JSON.stringify({ email: params.email, password: params.password }),
     headers: JSON_HEADER,
   });
 
-  let payload: BackendLoginResponse | null = null;
+  let payload: BackendLoginResponse & { error?: string } | null = null;
   try {
-    payload = (await response.json()) as BackendLoginResponse;
+    payload = await response.json();
   } catch {
     payload = null;
+  }
+
+  // Fallback to Vercel upstream if Supabase Edge Function rejects due to missing JWT
+  if (
+    !response.ok &&
+    (payload?.message === "Missing authorization header" ||
+      payload?.error === "Missing authorization header" ||
+      response.status === 401) &&
+    endpoint.includes("supabase.co")
+  ) {
+    const fallbackEndpoint = endpoint.replace(
+      API_BASE_URL,
+      "https://cogni-advisor-backend.vercel.app"
+    );
+    response = await fetch(fallbackEndpoint, {
+      method: "POST",
+      body: JSON.stringify({ email: params.email, password: params.password }),
+      headers: JSON_HEADER,
+    });
+
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
   }
 
   if (!response.ok) {

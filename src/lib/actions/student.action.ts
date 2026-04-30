@@ -17,7 +17,7 @@ export async function getStudentDataAction(
     throw new Error("Missing COGNI_API_BASE_URL environment variable.");
   }
 
-  const response = await fetch(`${apiBaseUrl}/api/users/students`, {
+  let response = await fetch(`${apiBaseUrl}/api/users/students`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -29,6 +29,27 @@ export async function getStudentDataAction(
     data = await response.json();
   } catch {
     data = null;
+  }
+
+  const isSupabaseError =
+    !response.ok &&
+    response.status === 401 &&
+    apiBaseUrl.includes("supabase.co");
+
+  if (isSupabaseError) {
+    const fallbackUrl = "https://cogni-advisor-backend.vercel.app/api/users/students";
+    response = await fetch(fallbackUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
   }
 
   // Some backends block student list endpoints for student role.
